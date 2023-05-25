@@ -1,0 +1,96 @@
+# Changing udev rules
+This document adds the user to a group called 'comm' and gives comm members permission to work with:  
+gpio  
+spidev0.0  
+i2c-1  
+
+You would add similar rules to use spidev0.1 and i2c-0 
+
+## Create a group
+### We create a group called 'comm'
+sudo groupadd --system comm
+
+### We add the user to the group
+sudo usermod -a -G comm <user_name>  
+sudo usermod -a -G comm ubuntu
+
+### Check they were added
+groups <user_name>  
+groups ubuntu
+
+## Gather data if needed
+udevadm info --query=all --name=/dev/i2c-1  
+### Output:
+P: /devices/platform/soc/fe804000.i2c/i2c-1/i2c-dev/i2c-1
+N: i2c-1
+S: i2c-1
+E: DEVLINKS=/dev/i2c-1
+E: DEVNAME=/dev/i2c-1
+E: DEVPATH=/devices/platform/soc/fe804000.i2c/i2c-1/i2c-dev/i2c-1
+E: MAJOR=89
+E: MINOR=1
+E: SUBSYSTEM=i2c-dev
+E: USEC_INITIALIZED=5699276
+E: net.ifnames=0
+
+udevadm info --query=all --name=/dev/spidev0.0  
+### Output:
+P: /devices/platform/soc/fe204000.spi/spi_master/spi0/spi0.0/spidev/spidev0.0
+N: spidev0.0
+E: DEVNAME=/dev/spidev0.0
+E: DEVPATH=/devices/platform/soc/fe204000.spi/spi_master/spi0/spi0.0/spidev/spidev0.0
+E: MAJOR=153
+E: MINOR=0
+E: SUBSYSTEM=spidev
+E: USEC_INITIALIZED=15013694
+E: net.ifnames=0
+
+udevadm info --query=all --name=/dev/gpiomem
+### Output:
+P: /devices/virtual/bcm2835-gpiomem/gpiomem
+N: gpiomem
+E: DEVNAME=/dev/gpiomem
+E: DEVPATH=/devices/virtual/bcm2835-gpiomem/gpiomem
+E: MAJOR=239
+E: MINOR=0
+E: SUBSYSTEM=bcm2835-gpiomem
+E: USEC_INITIALIZED=5707575
+E: net.ifnames=0
+
+
+### From this you get the DEVPATH, SUBSYSTEM
+
+cd /etc/udev/rules.d
+sudo touch 91-comm.rules
+sudo nano 91-comm.rules
+
+### Add the following lines:
+
+SUBSYSTEM=="i2c-dev", ACTION=="add", DEVPATH=="/devices/platform/soc/fe804000.i2c/i2c-1/i2c-dev/i2c-1", SYMLINK+="i2c-1", GROUP="comm", MODE="0660
+
+SUBSYSTEM=="spidev", ACTION=="add", DEVPATH=="/devices/platform/soc/fe204000.spi/spi_master/spi0/spi0.0/spidev/spidev0.0", SYMLINK+="spidev0.0", GROUP="comm", MODE="0660
+
+SUBSYSTEM=="bcm2835-gpiomem", ACTION=="add", DEVPATH=="/devices/virtual/bcm2835-gpiomem/gpiomem", SYMLINK+="gpio", GROUP="comm", MODE="0660
+
+
+### Save and restart the system
+#### Check it works
+ls -l /dev/gpiomem
+#### Output:
+crw-rw---- 1 root comm 239, 0 Aug  6 18:00 /dev/gpiomem
+
+ls -l /dev/spidev0.0
+#### Output:
+crw-rw---- 1 root comm 153, 0 Aug  6 18:00 /dev/spidev0.0
+
+ls -l /dev/i2c*
+#### Output:
+crw-rw---- 1 root comm 89, 1 Aug  6 18:00 /dev/i2c-1
+
+
+https://linuxconfig.org/tutorial-on-how-to-write-basic-udev-rules-in-linux
+http://manpages.ubuntu.com/manpages/xenial/man7/udev.7.html
+https://unix.stackexchange.com/questions/359595/confused-about-udevadm-usage
+https://www.raspberrypi.org/forums/viewtopic.php?t=9667
+
+

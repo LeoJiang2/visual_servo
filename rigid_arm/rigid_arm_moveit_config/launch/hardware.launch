@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<launch>
+    
+  <rosparam file="$(find rigid_arm_moveit_config)/config/controllers_config/trajectory_controller.yaml" command="load"/>
+  <rosparam file="$(find rigid_arm_moveit_config)/config/controllers_config/gazebo_ros_control_params.yaml" command="load"/>
+  <rosparam file="$(find rigid_arm_moveit_config)/config/joint_limits.yaml" command="load"/>
+​
+<arg name="urdf_path" default="$(find rigid_arm_description)/robots/rigid_arm.urdf.xacro"/>
+<param name="robot_description" command="$(find xacro)/xacro --inorder $(arg urdf_path)" />
+
+  <!-- <node name="RigidArmHardwareInterface" pkg="rigid_arm_hw_int_node" type="rigid_arm_hw_int_node" output="screen"/> -->
+
+​ <!-- By default, we won't load or override the robot_description -->
+  <arg name="load_robot_description" default="false"/>
+<param name="trajectory_execution/allowed_start_tolerance" value="0.0"/>
+
+  <!-- Run the main MoveIt! executable without trajectory execution (we do not have controllers configured by default) -->
+  <include file="$(find rigid_arm_moveit_config)/launch/move_group.launch">
+    <arg name="allow_trajectory_execution" value="true"/>
+    <arg name="fake_execution" value="false"/>
+    <arg name="info" value="true"/>
+    <arg name="debug" value="false"/>
+    <arg name="load_robot_description" value="$(arg load_robot_description)"/>
+  </include>  
+
+ <!-- <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher"/ >
+    
+  <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"
+        args="
+            /MyRobot/joints_update
+            /MyRobot/JointA_EffortController
+            /MyRobot/JointB_EffortController
+            /MyRobot/JointC_PositionController
+        "/> -->
+ <!-- Load the controllers -->
+  <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false"
+    output="screen" args="joint_state_controller arm_controller"/>
+
+  <node name="RigidArmHardwareInterface" pkg="rigid_arm_hw_int_node" type="rigid_arm_hw_int_node" output="screen"/>
+    
+<!--
+<rosparam file="$(find gen_comm_pkg)/config/pin_out.yaml" />
+    <rosparam file="$(find gen_comm_pkg)/config/parameters.yaml" />
+
+    <node pkg="i2c_comm_pkg" name="i2c_comm_node" type="i2c_comm.py" output="screen"/>
+    
+    <node pkg="spi_comm_pkg" name="spi_comm_node" type="spi_comm.py" output="screen"/>
+  -->
+
+ <!--   <node pkg="accumulator_pkg" name="accumulator_node" type="accumulator.py" output="screen"/>-->
+
+</launch>

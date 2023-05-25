@@ -1,0 +1,16 @@
+# This file is setting up all the settings and options for soft arm training
+
+trajectory_size: 3
+
+numb_trajectories: 1
+
+start_plan_count: 1
+
+wait: 3
+
+# Used to make the 0 position with link 4 horizontal
+offset_theta_1: 0
+offset_theta_2: 0
+offset_theta_3: 0
+offset_theta_3_vert: 0
+offset_theta_4: 0

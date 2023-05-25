@@ -1,0 +1,3 @@
+float32[] camera_config_d
+---
+geometry_msgs/Point[] points

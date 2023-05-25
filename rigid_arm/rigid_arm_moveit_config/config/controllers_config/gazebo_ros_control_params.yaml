@@ -1,0 +1,8 @@
+gazebo_ros_control:
+  pid_gains:
+    joint_01: {p: 1000, i: 0.0, d: 0.1, i_clamp: 0.0}
+    joint_02: {p: 1000, i: 0.0, d: 0.1, i_clamp: 0.0}
+    joint_03: {p: 1000, i: 0.0, d: 0.1, i_clamp: 0.0}
+    fake_joint_04: {p: 1000, i: 0.0, d: 0.1, i_clamp: 0.0}
+    fake_joint_05: {p: 1000, i: 0.0, d: 0.1, i_clamp: 0.0}
+    fake_joint_06: {p: 1000, i: 0.0, d: 0.1, i_clamp: 0.0}

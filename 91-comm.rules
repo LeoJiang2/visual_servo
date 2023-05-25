@@ -1,0 +1,5 @@
+SUBSYSTEM=="i2c-dev", ACTION=="add", DEVPATH=="/devices/platform/soc/fe804000.i2c/i2c-1/i2c-dev/i2c-1", SYMLINK+="i2c-1", GROUP="comm", MODE="0660
+
+SUBSYSTEM=="spidev", ACTION=="add", DEVPATH=="/devices/platform/soc/fe204000.spi/spi_master/spi0/spi0.0/spidev/spidev0.0", SYMLINK+="spidev0.0", GROUP="comm", MODE="0660
+
+SUBSYSTEM=="bcm2835-gpiomem", ACTION=="add", DEVPATH=="/devices/virtual/bcm2835-gpiomem/gpiomem", SYMLINK+="gpio", GROUP="comm", MODE="0660

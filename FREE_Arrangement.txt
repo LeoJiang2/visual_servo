@@ -1,0 +1,14 @@
+FREE Arrangemnet and Defintions
+7/20/21 Ben and Naveen
+
+Observations are done "down" the length of link 4
+i.e. the "view" of the robot
+
+viewer ---->  link 3 ---->  link 4 ----> ee
+
+      (B)
+   (R1) (R2)
+   
+R1 is clockwise rotation
+R2 is counterclockwise rotation
+B bends downward (toward R1 and R2)

@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<library path="lib/librigid_arm_arm_moveit_ikfast_plugin">
+  <class base_class_type="kinematics::KinematicsBase" name="rigid_arm_arm/IKFastKinematicsPlugin" type="rigid_arm_arm::IKFastKinematicsPlugin">
+    <description>IKFast61 plugin for closed-form kinematics of rigid_arm arm</description>
+  </class>
+</library>

@@ -1,0 +1,11 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: rigid_arm_description
+    relative_path: robots/rigid_arm.urdf.xacro
+    xacro_args: ""
+  SRDF:
+    relative_path: config/rigid_arm.srdf
+  CONFIG:
+    author_name: Ben Walt
+    author_email: walt@illinois.edu
+    generated_timestamp: 1616008368

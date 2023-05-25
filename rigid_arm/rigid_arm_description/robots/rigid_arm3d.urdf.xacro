@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<robot name="rigid_arm" xmlns:xacro="http://wiki.ros.org/xacro">
+
+
+<xacro:property name="Base_Link_Orientation" value="0" />
+<xacro:property name="Base_Link_Length" value="0.1143" />
+<xacro:property name="Link_1_Length" value="0.089" />
+<xacro:property name="Joint_2_Offset" value="0.0425" /> <!--Is this correct? -->
+<xacro:property name="Link_2_Length" value="0.267" /> 
+<xacro:property name="Joint_3_Offset" value="-0.0121" />
+<xacro:property name="Joint_3_Offset_2" value="-0.0487" /> <!--Needs to line up. -->
+<xacro:property name="Link_3_Length" value="0.0221" /> <!--Big Gap-->
+<xacro:property name="Link_4_Length" value="0.3436" /> 
+<xacro:property name="BR2_Offset" value="0.02775" /> 
+
+
+    <link name="world" />
+    <joint name="fixed" type="fixed">
+        <parent link="world" />
+        <child link="ts_body" />
+    </joint>
+
+<link name="ts_body">
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <geometry>
+                <mesh filename="package://rigid_arm_description/meshes/ts_dummy.dae" scale="1 1 1" />
+            </geometry>
+            
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <geometry>
+                <mesh filename="package://rigid_arm_description/meshes/ts_dummy_hull.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+        
+<inertial>
+            <mass value="0.1" />
+            <inertia ixx="0.03" ixy="0.0" ixz="0.0" iyy="0.03" iyz="0.0" izz="0.03" />
+        </inertial>
+
+    </link>
+    <joint name="sub_joint" type="fixed">
+        <origin rpy="0 0 0" xyz="0 0 0.285" />
+        <parent link="ts_body" />
+        <child link="base_link" />
+    </joint>
+
+
+    <link name="base_link">
+        <visual>
+            <origin rpy="0 0 2.44346" xyz="0 0 0" />
+            <geometry>
+                <mesh filename="package://rigid_arm_description/meshes/base_link.dae" scale="1 1 1" />
+            </geometry>
+            
+        </visual>
+        <collision>
+            <origin rpy="0 0 2.44346" xyz="0 0 0" />
+            <geometry>
+                <mesh filename="package://rigid_arm_description/meshes/base_link_hull.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+        
+<inertial>
+            <mass value="0.1" />
+            <inertia ixx="0.03" ixy="0.0" ixz="0.0" iyy="0.03" iyz="0.0" izz="0.03" />
+        </inertial>
+
+    </link>
+    <joint name="joint_01" type="revolute">
+        <axis xyz="0 0 1" />
+        <limit effort="1000.0" lower="-2.784" upper="2.784" velocity="0.3" />
+        <origin rpy="0 0 0" xyz="0 0 ${Base_Link_Length}" />
+        <parent link="base_link" />
+        <child link="link1" />
+    </joint>
+
+
+
+    <link name="link1">
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <geometry>
+                <mesh filename="package://rigid_arm_description/meshes/link_1.dae" scale="1 1 1" />
+            </geometry>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <geometry>
+                <mesh filename="package://rigid_arm_description/meshes/link_1_hull.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+        
+<inertial>
+            <mass value="0.1" />
+            <inertia ixx="0.03" ixy="0.0" ixz="0.0" iyy="0.03" iyz="0.0" izz="0.03" />
+        </inertial>
+
+    </link>
+    <joint name="joint_02" type="revolute">
+        <axis xyz="0 1 0" />
+        <limit effort="1000.0" lower="-2.784" upper="2.784" velocity="1.0" />
+        <origin rpy="0 0 0" xyz="0 ${Joint_2_Offset} ${Link_1_Length} " />
+        <parent link="link1" />
+        <child link="link2" />
+    </joint>
+    <link name="link2">
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <geometry>
+                <mesh filename="package://rigid_arm_description/meshes/link_2.dae" scale="1 1 1" />
+            </geometry>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <geometry>
+                <mesh filename="package://rigid_arm_description/meshes/link_2_hull.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+        
+<inertial>
+            <mass value="0.1" />
+            <inertia ixx="0.03" ixy="0.0" ixz="0.0" iyy="0.03" iyz="0.0" izz="0.03" />
+        </inertial>
+
+    </link>
+    <joint name="joint_03" type="revolute">
+        <axis xyz="0 -1 0" />
+        <limit effort="1000.0" lower="-2.784" upper="2.784" velocity="0.3" />
+        <origin rpy="0 0 0" xyz="0 ${Joint_3_Offset} ${Link_2_Length}" />
+        <parent link="link2" />
+        <child link="link3" />
+    </joint>
+    <link name="link3">
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <geometry>
+                <mesh filename="package://rigid_arm_description/meshes/link_3.dae" scale="1 1 1" />
+            </geometry>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <geometry>
+                <mesh filename="package://rigid_arm_description/meshes/link_3_hull.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+        
+<inertial>
+            <mass value="0.1" />
+            <inertia ixx="0.03" ixy="0.0" ixz="0.0" iyy="0.03" iyz="0.0" izz="0.03" />
+        </inertial>
+
+    </link>
+   <joint name="joint_04" type="fixed">
+        <origin rpy="0 0 0" xyz="0 ${Joint_3_Offset_2} ${Link_3_Length}" />
+        <parent link="link3" />
+        <child link="link4" />
+    </joint>
+    <link name="link4">
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <geometry>
+                <mesh filename="package://rigid_arm_description/meshes/link_4.dae" scale="1 1 1" />
+            </geometry>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <geometry>
+                <mesh filename="package://rigid_arm_description/meshes/link_4_hull.dae" scale="1 1 1" />
+            </geometry>
+        </collision>
+        
+<inertial>
+            <mass value="0.1" />
+            <inertia ixx="0.03" ixy="0.0" ixz="0.0" iyy="0.03" iyz="0.0" izz="0.03" />
+        </inertial>
+
+    </link>
+
+    
+
+
+
+
+    <joint name="ee_fixed_joint" type="fixed">
+        <origin rpy="0 0 0" xyz="${BR2_Offset} 0 ${Link_4_Length}" />
+        <parent link="link4" />
+        <child link="ee_link" />
+    </joint>
+    <link name="ee_link">
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <geometry>
+                <box size="0.01 0.01 0.01" />
+            </geometry>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <geometry>
+                <box size="0.01 0.01 0.01" />
+            </geometry>
+        </collision>
+
+        
+<inertial>
+            <mass value="0.1" />
+            <inertia ixx="0.03" ixy="0.0" ixz="0.0" iyy="0.03" iyz="0.0" izz="0.03" />
+        </inertial>
+
+    </link>
+    
+    <joint name="hand_joint" type="revolute">
+        <axis xyz="0 0 1" />
+        <limit effort="100.0" lower="-3.14" upper="3.14" velocity="0.3" />
+        <origin rpy="0 0 0" xyz="0 0 0" />
+        <parent link="ee_link" />
+        <child link="link5" />
+    </joint>
+    <link name="link5">
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <geometry>
+                <sphere radius=".02" />
+            </geometry>
+		<gazebo>
+		<material name="green">
+            <color rgba="0 1 0 1"/>
+      </material>
+	  </gazebo>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <geometry>
+                <sphere radius=".02" />
+            </geometry>
+        </collision>
+        
+<inertial>
+            <mass value="0.1" />
+            <inertia ixx="0.03" ixy="0.0" ixz="0.0" iyy="0.03" iyz="0.0" izz="0.03" />
+        </inertial>
+
+    </link>
+
+
+
+
+<transmission name="trans_joint_01">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="joint_01">
+            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="joint_01_motor">
+            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+    <transmission name="trans_joint_02">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="joint_02">
+            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="joint_02_motor">
+            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+    <transmission name="trans_joint_03">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="joint_03">
+            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="joint_03_motor">
+            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+    
+    <gazebo>
+        <plugin filename="libgazebo_ros_control.so" name="gazebo_ros_control">
+            <robotNamespace>/</robotNamespace>
+        </plugin>
+    </gazebo>
+ 
+</robot>

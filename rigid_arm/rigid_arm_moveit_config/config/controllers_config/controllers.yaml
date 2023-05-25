@@ -1,0 +1,12 @@
+controller_list:
+  - name: arm_controller
+    action_ns: "follow_joint_trajectory"
+    type: FollowJointTrajectory
+    default: true
+    joints:
+      - joint_01
+      - joint_02
+      - joint_03
+      - fake_joint_04
+      - fake_joint_05
+      - fake_joint_06

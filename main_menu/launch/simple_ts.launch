@@ -1,0 +1,13 @@
+<launch>
+
+    <rosparam file="$(find pi_comm_pkg)/config/pin_out.yaml" />
+    <rosparam file="$(find pi_comm_pkg)/config/parameters.yaml" />
+    
+    <node pkg="main_menu" name="main_menu_node" type="main_simple_ts.py" output="screen"/>
+  <node pkg="pi_comm_pkg" name="pi_comm_node" type="pi_comm.py" output="screen"/>
+   <!-- <node pkg="patriot_pkg" name="patriot_pkg_node" type="patriot_pkg_node" output="screen"/> -->
+  <node pkg="task_space_pkg" name="task_space_pkg_node" type="task_space_pkg_node" output="screen"/>
+ 
+    <node pkg="accumulator_pkg" name="accumulator_node" type="accumulator.py" output="screen"/>
+
+</launch>

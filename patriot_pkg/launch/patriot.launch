@@ -1,0 +1,6 @@
+<launch>
+
+   
+    <node pkg="patriot_pkg" name="patriot_pkg_node" type="patriot_pkg_node" output="screen"/> 
+   
+</launch>

@@ -1,0 +1,3 @@
+Header header
+float32 camera_pan_rad
+float32 camera_tilt_rad

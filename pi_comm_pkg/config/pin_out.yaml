@@ -1,0 +1,38 @@
+# This file is for setting up all the connections to the Raspberry Pi and equipment
+# It should be changed to reflect the current connections as needed.
+# This prevents the need to edit individual files when wiring.
+
+# Big Easy Driver Connection Pins
+bed_step: 20
+bed_dir: 21
+limit_switch: 16
+
+# Compressor and Vacuum Relay Pins
+compressor_relay: 26
+vacuum_relay: 1
+
+# I2C Multiplexor Channel Assignments
+TOF: -1
+Color: -1
+SERVO: 0
+DAC_1: 1
+DAC_2: 2
+DAC_3: 3
+DAC_4: 4
+ADS1115_ADC: 5
+
+# PWM Channel Assignments
+CAMERA_PAN: 14
+CAMERA_TILT: 15
+THETA_1: 0 # Body
+THETA_2: 1 # Shoulder
+THETA_3: 2 # Elbow
+THETA_4: 3 # Wrist
+
+# ADC Channel Assignments
+reg_1: 0
+reg_2: 1
+reg_3: 2
+reg_4: 3 # Gripper if used
+IR_sensor: -1
+accumulator: 5

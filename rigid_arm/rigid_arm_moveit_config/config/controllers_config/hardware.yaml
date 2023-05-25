@@ -1,0 +1,10 @@
+rigid_arm:
+  hardware_interface:
+    loop_hz: 10 # hz
+    joints:
+      - joint_01
+      - joint_02
+      - joint_03
+      # - joint_04
+      # - fake_joint_05
+      # - fake_joint_06

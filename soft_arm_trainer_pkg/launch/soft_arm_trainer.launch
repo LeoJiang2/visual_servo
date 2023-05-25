@@ -1,0 +1,15 @@
+<launch>
+
+    <rosparam file="$(find pi_comm_pkg)/config/pin_out.yaml" />
+    <rosparam file="$(find pi_comm_pkg)/config/parameters.yaml" />
+    <rosparam file="$(find soft_arm_trainer_pkg)/config/soft_arm_trainer_parameters.yaml" />
+    
+    <node pkg="pi_comm_pkg" name="pi_comm_node" type="pi_comm.py" output="screen"/>
+    
+    <node pkg="accumulator_pkg" name="accumulator_node" type="accumulator.py" output="screen"/>
+    
+    <node pkg="soft_arm_trainer_pkg" name="soft_arm_trainer_node" type="soft_arm_trainer.py" output="screen" cwd="node" />
+    
+    <node pkg="patriot_pkg" name="patriot_pkg_node" type="patriot_pkg_node" output="screen"/>
+
+</launch>

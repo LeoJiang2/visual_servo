@@ -1,0 +1,9 @@
+<launch>
+
+	<rosparam file="$(find pi_comm_pkg)/config/pin_out.yaml" />
+    <rosparam file="$(find pi_comm_pkg)/config/parameters.yaml" />
+    
+   <node pkg="pi_comm_pkg" name="pi_comm_node" type="pi_comm.py" output="screen"/>
+   <node pkg="task_space_pkg" name="task_space_pkg_node" type="task_space_pkg_node" output="screen"/>
+   
+</launch>
