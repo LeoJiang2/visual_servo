@@ -202,37 +202,122 @@ def find_berry_points():
         # Tap the Space to save the image 
 	           
 	# start time
-       
-        start = time.time()
-        # Count the number of csv files in the folder, 
-        # so that the recollection will not overwrite the existing pictures after closing the software 
-        # Convert images to numpy arrays
-        depth_image = np.asanyarray(aligned_depth_frame.get_data())
-        color_image = np.asanyarray(color_frame.get_data())
+		xy = blob_search(images, red)
+        # ~ start = time.time()
+        # ~ # Count the number of csv files in the folder, 
+        # ~ # so that the recollection will not overwrite the existing pictures after closing the software 
+        # ~ # Convert images to numpy arrays
+        # ~ depth_image = np.asanyarray(aligned_depth_frame.get_data())
+        # ~ color_image = np.asanyarray(color_frame.get_data())
 
-        results = model.detect([color_image], verbose=1)
+        # ~ results = model.detect([color_image], verbose=1)
         
-        r = results[0] 
-        print_rois = r['rois']
+        # ~ r = results[0] 
+        # ~ print_rois = r['rois']
         
-        # Number of instances
-        N = r['rois'].shape[0]
-        XYZ_coordinates = []
-        XYZ_coordinates = XYZ_calculation(XYZ_coordinates, depth_intrin, depth_scale, depth_image,r['masks'],N)
-        filtered_XYZ = []
-        for ele in range(len(XYZ_coordinates)):
-            if XYZ_coordinates[ele][2] < 700:
-                filtered_XYZ.append(XYZ_coordinates[ele])
+        # ~ # Number of instances
+        # ~ N = r['rois'].shape[0]
+        # ~ XYZ_coordinates = []
+        # ~ XYZ_coordinates = XYZ_calculation(XYZ_coordinates, depth_intrin, depth_scale, depth_image,r['masks'],N)
+        # ~ filtered_XYZ = []
+        # ~ for ele in range(len(XYZ_coordinates)):
+            # ~ if XYZ_coordinates[ele][2] < 700:
+                # ~ filtered_XYZ.append(XYZ_coordinates[ele])
    
 
 
-        print(f'Util: Berry Detection Results = {filtered_XYZ}')
-        print(time.time()-start)
-        cv2.imwrite(model_path1 + 'result.png', color_image)
-        cv2.destroyAllWindows()
-        loop_count = 0
-    return(filtered_XYZ)
+        # ~ print(f'Util: Berry Detection Results = {filtered_XYZ}')
+        # ~ print(time.time()-start)
+        # ~ cv2.imwrite(model_path1 + 'result.png', color_image)
+        # ~ cv2.destroyAllWindows()
+        # ~ loop_count = 0
+    return(xy)
+    
+def blob_search(image_raw, color):
 
+    # Setup SimpleBlobDetector parameters.
+    params = cv2.SimpleBlobDetector_Params()
+
+    # Filter by Color
+    params.filterByColor = False
+
+    # Filter by Area.
+    params.filterByArea = False
+    params.minArea = 100
+
+    # Filter by Circularity
+    params.filterByCircularity = False
+    #params.minCircularity = 0.5
+
+    # Filter by Inerita
+    params.filterByInertia = False
+
+    # Filter by Convexity
+    params.filterByConvexity = False
+
+    # Create a detector with the parameters
+    detector = cv2.SimpleBlobDetector_create(params)
+
+    # Convert the image into the HSV color space
+    hsv_image = cv2.cvtColor(image_raw, cv2.COLOR_BGR2HSV)
+    
+    if color == "white":
+        lower = (0,0,175)     
+        upper = (5,5,255)  
+
+    elif color == "purple":
+        lower = (125,50,50)   
+        upper = (145, 255, 240) 
+
+    elif color == "red":
+        lower = (0, 100, 20)
+        upper = (10, 255, 255)
+
+    elif color == "green":
+        lower = (120, 50, 50)
+        upper = (180, 255, 255)
+
+    elif color == "yellow":
+        lower = (22, 50, 50)
+        upper = (45, 255, 240)
+
+    # Define a mask using the lower and upper bounds of the target color
+    mask_image = cv2.inRange(hsv_image, lower, upper)
+
+
+    keypoints = detector.detect(mask_image)
+
+    # Find blob centers in the image coordinates
+    blob_image_center = []
+    num_blobs = len(keypoints)
+    for i in range(num_blobs):
+        blob_image_center.append((keypoints[i].pt[0],keypoints[i].pt[1]))
+
+    # Draw the keypoints on the detected block
+    im_with_keypoints = cv2.drawKeypoints(image_raw, keypoints, outImage=np.array([]), color=(10, 255, 255))
+
+    x_y = []
+
+    if(num_blobs == 0):
+        #print("No block found!")
+        f = 0 # do nothing
+    else:
+        # Convert image coordinates to global world coordinate using IM2W() function
+        for i in range(num_blobs):
+            xw_yw.append(blob_image_center[i][0], blob_image_center[i][1])
+
+
+    cv2.namedWindow("Camera View")
+    cv2.imshow("Camera View", image_raw)
+    cv2.namedWindow("Mask View")
+    cv2.imshow("Mask View", mask_image)
+    cv2.namedWindow("Keypoint View")
+    cv2.imshow("Keypoint View", im_with_keypoints)
+
+    cv2.waitKey(2)
+    return x_y
+
+find_berry_points()
 
 
 
