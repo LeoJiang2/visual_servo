@@ -17,7 +17,7 @@ import matplotlib.lines as lines
 import itertools
 import colorsys
 #import IPython.display
-import pyrealsense2 as rs 
+import pyrealsense2 as rs
 import pandas as pd
 
 from skimage.measure import find_contours
@@ -26,11 +26,11 @@ from PIL import Image
 
 
 # Import Mask RCNN
-import mrcnn.model as modellib
-from mrcnn import visualize
-from mrcnn.model import log
-from mrcnn import utils
-from mrcnn.config import Config
+# import mrcnn.model as modellib
+# from mrcnn import visualize
+# from mrcnn.model import log
+# from mrcnn import utils
+# from mrcnn.config import Config
 
 
 def getImageNdarrayVar(image):
@@ -42,7 +42,7 @@ def get_ax(rows=1, cols=1, size=16):
     """Return a Matplotlib Axes array to be used in
     all visualizations in the notebook. Provide a
     central point to control graph sizes.
-    
+
     Adjust the size attribute to control how big to render images
     """
     _, ax = plt.subplots(rows, cols, figsize=(size*cols, size*rows))
@@ -61,35 +61,48 @@ def removeOutliers(x, outlierConstant):
             resultList.append(y)
     return resultList
 
-def XYZ_calculation(XYZ_coordinates, depth_intrin, depth_scale, depth_image,masks,Number):
-    
-    for c in range(Number):
-        depth_array = np.where(masks[:, :, c] == 1,depth_image,masks[:, :, c])
-        depth_value =  depth_array[np.nonzero(depth_array)]
-        depth_removeoutliers = removeOutliers(depth_value,1)
-        depth_mean = np.mean(depth_removeoutliers)*depth_scale*1000  # convert to mm
+#  for ml model
+# def XYZ_calculation(XYZ_coordinates, depth_intrin, depth_scale, depth_image,masks,Number):
+#
+#     for c in range(Number):
+#         depth_array = np.where(masks[:, :, c] == 1,depth_image,masks[:, :, c])
+#         depth_value =  depth_array[np.nonzero(depth_array)]
+#         depth_removeoutliers = removeOutliers(depth_value,1)
+#         depth_mean = np.mean(depth_removeoutliers)*depth_scale*1000  # convert to mm
+#
+#         M = cv2.moments(depth_array)
+#         cX= int(M["m10"] / M["m00"])
+#         cY= int(M["m01"] / M["m00"])
+#         XYZ_point = rs.rs2_deproject_pixel_to_point(depth_intrin, [cX,cY], depth_mean)
+#         XYZ_coordinates.append(XYZ_point)
+#     return XYZ_coordinates
 
-        M = cv2.moments(depth_array)
-        cX= int(M["m10"] / M["m00"])
-        cY= int(M["m01"] / M["m00"])    
-        XYZ_point = rs.rs2_deproject_pixel_to_point(depth_intrin, [cX,cY], depth_mean)
+# for blob detection
+def XYZ_calculation(XYZ_coordinates, depth_intrin, depth_scale, depth_image,masks, Number, center):
+    for c in range(Number):
+        depth_array = np.where(masks[c, :, :] == 1,depth_image,masks[c, :, :])
+        depth_value =  depth_array[np.nonzero(depth_array)]
+        # depth_removeoutliers = removeOutliers(depth_value,1)
+        depth_mean = np.mean(depth_value)*depth_scale*1000  # convert to mm
+        print(depth_mean)
+        XYZ_point = rs.rs2_deproject_pixel_to_point(depth_intrin, [int(center[c][0]), int(center[c][1])] , depth_mean)
         XYZ_coordinates.append(XYZ_point)
     return XYZ_coordinates
 
-class InferenceConfig(Config):
-    # Set batch size to 1 since we'll be running inference on
-    # one image at a time. 
-    NAME = "cherry tomato"
+# class InferenceConfig(Config):
+#     # Set batch size to 1 since we'll be running inference on
+#     # one image at a time.
+#     NAME = "cherry tomato"
+#
+#     # Number of classes (including background)
+#     NUM_CLASSES = 1 + 1  # Background + cherry tomato
+#     GPU_COUNT = 1
+#     IMAGES_PER_GPU = 1
 
-    # Number of classes (including background)
-    NUM_CLASSES = 1 + 1  # Background + cherry tomato
-    GPU_COUNT = 1
-    IMAGES_PER_GPU = 1
 
 
-
-def find_berry_points(): 
-    # Root directory of the project
+def find_berry_points():
+    #Root directory of the project
     ROOT_DIR = os.path.abspath("./")
     cwd = os.getcwd()
     model_path = cwd[:-4]
@@ -100,9 +113,9 @@ def find_berry_points():
     # Local path to trained weights file
     MODEL_PATH = os.path.join(model_path1, "mask_rcnn_cherry_tomato.h5")
 
-   
+
     # Local path to trained weights file
-	    
+
     # Directory of images to run detection on
     IMAGE_DIR = os.path.join(ROOT_DIR, "images")
 
@@ -115,13 +128,13 @@ def find_berry_points():
     SAVE_RESULTS = True
 
     # Creat config
-    config = InferenceConfig()
-
-    # Create model object in inference mode.
-    model = modellib.MaskRCNN(mode="inference", model_dir=MODEL_PATH, config=config)
-
-    # Load weights trained on cherry tomatoes
-    model.load_weights(MODEL_PATH, by_name=True)
+    # config = InferenceConfig()
+    #
+    # # Create model object in inference mode.
+    # model = modellib.MaskRCNN(mode="inference", model_dir=MODEL_PATH, config=config)
+    #
+    # # Load weights trained on cherry tomatoes
+    # model.load_weights(MODEL_PATH, by_name=True)
 
 
     # Configure depth and color streams
@@ -132,11 +145,11 @@ def find_berry_points():
     config = rs.config()
     config.enable_stream(rs.stream.depth, 848, 480, rs.format.z16, 30)                 # depth data
     config.enable_stream(rs.stream.color, 848, 480, rs.format.bgr8, 30)  #1280, 720    # RGB data
- 
+
     # Start streaming
     profile = pipeline.start(config)
 
-    # Getting the depth sensor's depth scale 
+    # Getting the depth sensor's depth scale
     depth_sensor = profile.get_device().first_depth_sensor()
     depth_scale = depth_sensor.get_depth_scale()
 
@@ -151,21 +164,21 @@ def find_berry_points():
     align = rs.align(align_to)
 
     # Streaming loop
-   
-    
+
+
     loop_count = 1
     XYZ_coordinates = []
     while loop_count==1:
-	    
+
         # Get frameset of color and depth
-        for i in range(10): 
+        for i in range(10):
             frames = pipeline.wait_for_frames()
 
         # Align the depth frame to color frame
         aligned_frames = align.process(frames)
 
         # Get aligned frames
-        aligned_depth_frame = aligned_frames.get_depth_frame() 
+        aligned_depth_frame = aligned_frames.get_depth_frame()
 
         color_frame = aligned_frames.get_color_frame()
 
@@ -175,7 +188,7 @@ def find_berry_points():
 	# Validate that both frames are valid
         if not aligned_depth_frame or not color_frame:
             continue
-	    
+
         # Convert images to numpy arrays
         depth_image = np.asanyarray(aligned_depth_frame.get_data())
         color_image = np.asanyarray(color_frame.get_data())
@@ -190,49 +203,52 @@ def find_berry_points():
         depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET)
         images = np.hstack((bg_removed, depth_colormap))
 
-        # Resize the image size for better visualization in the window        
-        images  = cv2.resize(images, (1280, 460))   
-	    
+        # Resize the image size for better visualization in the window
+        images  = cv2.resize(images, (1280, 460))
+
         if VISUALIZE == True:
             cv2.namedWindow('RealSense', cv2.WINDOW_AUTOSIZE)
             cv2.imshow('RealSense', images)
         c = cv2.waitKey(1)
-	    
+        mask, num, center = blob_search(color_image, 'berry')
         # Manual data collection and testing (Press space,ascii 32)
-        # Tap the Space to save the image 
-	           
+        # Tap the Space to save the image
+
 	# start time
-		xy = blob_search(images, red)
-        # ~ start = time.time()
-        # ~ # Count the number of csv files in the folder, 
-        # ~ # so that the recollection will not overwrite the existing pictures after closing the software 
-        # ~ # Convert images to numpy arrays
-        # ~ depth_image = np.asanyarray(aligned_depth_frame.get_data())
-        # ~ color_image = np.asanyarray(color_frame.get_data())
+        start = time.time()
+        # Count the number of csv files in the folder,
+        # so that the recollection will not overwrite the existing pictures after closing the software
+        # Convert images to numpy arrays
+        depth_image = np.asanyarray(aligned_depth_frame.get_data())
+        color_image = np.asanyarray(color_frame.get_data())
 
-        # ~ results = model.detect([color_image], verbose=1)
-        
-        # ~ r = results[0] 
-        # ~ print_rois = r['rois']
-        
-        # ~ # Number of instances
-        # ~ N = r['rois'].shape[0]
-        # ~ XYZ_coordinates = []
-        # ~ XYZ_coordinates = XYZ_calculation(XYZ_coordinates, depth_intrin, depth_scale, depth_image,r['masks'],N)
-        # ~ filtered_XYZ = []
-        # ~ for ele in range(len(XYZ_coordinates)):
-            # ~ if XYZ_coordinates[ele][2] < 700:
-                # ~ filtered_XYZ.append(XYZ_coordinates[ele])
-   
+        # results = model.detect([color_image], verbose=1)
+        #
+        # r = results[0]
+        # print_rois = r['rois']
+        # print(r)
+        #
+        # # Number of instances
+        # N = r['rois'].shape[0]
+        # XYZ_coordinates = []
+        # XYZ_coordinates = XYZ_calculation(XYZ_coordinates, depth_intrin, depth_scale, depth_image,r['masks'],N)
+        #
+        XYZ_coordinates = XYZ_calculation(XYZ_coordinates, depth_intrin, depth_scale, depth_image, mask, num, center)
+        filtered_XYZ = []
+        for ele in range(len(XYZ_coordinates)):
+            if XYZ_coordinates[ele][2] < 700:
+                filtered_XYZ.append(XYZ_coordinates[ele])
 
 
-        # ~ print(f'Util: Berry Detection Results = {filtered_XYZ}')
-        # ~ print(time.time()-start)
-        # ~ cv2.imwrite(model_path1 + 'result.png', color_image)
-        # ~ cv2.destroyAllWindows()
-        # ~ loop_count = 0
-    return(xy)
-    
+
+        print(f'Util: Berry Detection Results = {filtered_XYZ}')
+        print(time.time()-start)
+        cv2.imwrite(model_path1 + 'result.png', color_image)
+        # cv2.destroyAllWindows()
+        # loop_count = 0
+        # print(filtered_XYZ)
+    return(filtered_XYZ)
+
 def blob_search(image_raw, color):
 
     # Setup SimpleBlobDetector parameters.
@@ -260,18 +276,18 @@ def blob_search(image_raw, color):
 
     # Convert the image into the HSV color space
     hsv_image = cv2.cvtColor(image_raw, cv2.COLOR_BGR2HSV)
-    
+
     if color == "white":
-        lower = (0,0,175)     
-        upper = (5,5,255)  
+        lower = (0,0,175)
+        upper = (5,5,255)
 
     elif color == "purple":
-        lower = (125,50,50)   
-        upper = (145, 255, 240) 
+        lower = (125,50,50)
+        upper = (145, 255, 240)
 
-    elif color == "red":
-        lower = (0, 100, 20)
-        upper = (10, 255, 255)
+    elif color == "berry":
+        lower = (0, 150, 80)
+        upper = (5, 255, 255)
 
     elif color == "green":
         lower = (120, 50, 50)
@@ -284,7 +300,6 @@ def blob_search(image_raw, color):
     # Define a mask using the lower and upper bounds of the target color
     mask_image = cv2.inRange(hsv_image, lower, upper)
 
-
     keypoints = detector.detect(mask_image)
 
     # Find blob centers in the image coordinates
@@ -292,6 +307,12 @@ def blob_search(image_raw, color):
     num_blobs = len(keypoints)
     for i in range(num_blobs):
         blob_image_center.append((keypoints[i].pt[0],keypoints[i].pt[1]))
+
+    output_masks=[]
+    for i in range(num_blobs):
+        z = np.zeros((480, 848))
+        z[int(blob_image_center[i][1])][int(blob_image_center[i][0])] = 1
+        output_masks.append(z)
 
     # Draw the keypoints on the detected block
     im_with_keypoints = cv2.drawKeypoints(image_raw, keypoints, outImage=np.array([]), color=(10, 255, 255))
@@ -304,7 +325,7 @@ def blob_search(image_raw, color):
     else:
         # Convert image coordinates to global world coordinate using IM2W() function
         for i in range(num_blobs):
-            xw_yw.append(blob_image_center[i][0], blob_image_center[i][1])
+            x_y.append((blob_image_center[i][0], blob_image_center[i][1]))
 
 
     cv2.namedWindow("Camera View")
@@ -315,10 +336,6 @@ def blob_search(image_raw, color):
     cv2.imshow("Keypoint View", im_with_keypoints)
 
     cv2.waitKey(2)
-    return x_y
+    return np.asanyarray(output_masks), num_blobs, blob_image_center
 
 find_berry_points()
-
-
-
-
