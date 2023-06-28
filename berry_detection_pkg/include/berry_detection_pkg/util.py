@@ -25,6 +25,8 @@ from matplotlib.patches import Polygon
 from PIL import Image
 
 
+from berry_detection_pkg import Kinematics as kin
+
 # Import Mask RCNN
 # import mrcnn.model as modellib
 # from mrcnn import visualize
@@ -78,15 +80,24 @@ def removeOutliers(x, outlierConstant):
 #     return XYZ_coordinates
 
 # for blob detection
-def XYZ_calculation(XYZ_coordinates, depth_intrin, depth_scale, depth_image,masks, Number, center):
-    for c in range(Number):
-        depth_array = np.where(masks[c, :, :] == 1,depth_image,masks[c, :, :])
-        depth_value =  depth_array[np.nonzero(depth_array)]
-        # depth_removeoutliers = removeOutliers(depth_value,1)
-        depth_mean = np.mean(depth_value)*depth_scale*1000  # convert to mm
-        print(depth_mean)
-        XYZ_point = rs.rs2_deproject_pixel_to_point(depth_intrin, [int(center[c][0]), int(center[c][1])] , depth_mean)
-        XYZ_coordinates.append(XYZ_point)
+# def XYZ_calculation(XYZ_coordinates, depth_intrin, depth_scale, depth_image,masks, Number, center):
+#     for c in range(Number):
+#         depth_array = np.where(masks[c, :, :] == 1,depth_image,masks[c, :, :])
+#         depth_value =  depth_array[np.nonzero(depth_array)]
+#         # depth_removeoutliers = removeOutliers(depth_value,1)
+#         depth_mean = np.mean(depth_value)*depth_scale*1000  # convert to mm
+#         XYZ_point = rs.rs2_deproject_pixel_to_point(depth_intrin, [int(center[c][0]), int(center[c][1])] , depth_mean)
+#         XYZ_coordinates.append(XYZ_point)
+#     return XYZ_coordinates
+
+def XYZ_calculation(XYZ_coordinates, depth_intrin, depth_scale, depth_image,masks, center):
+    if len(center) == 0:
+        return XYZ_coordinates
+    depth_array = np.where(masks[ :, :] == 1,depth_image,masks[ :, :])
+    depth_value =  depth_array[np.nonzero(depth_array)]
+    depth_mean = np.mean(depth_value)*depth_scale*1000  # convert to mm
+    XYZ_point = rs.rs2_deproject_pixel_to_point(depth_intrin, [int(center[0][0]), -(480-int(center[0][1]))] , depth_mean)
+    XYZ_coordinates.append(XYZ_point)
     return XYZ_coordinates
 
 # class InferenceConfig(Config):
@@ -166,9 +177,9 @@ def find_berry_points():
     # Streaming loop
 
 
-    loop_count = 1
+    loop_count = 5
     XYZ_coordinates = []
-    while loop_count==1:
+    while loop_count > 1:
 
         # Get frameset of color and depth
         for i in range(10):
@@ -233,20 +244,27 @@ def find_berry_points():
         # XYZ_coordinates = []
         # XYZ_coordinates = XYZ_calculation(XYZ_coordinates, depth_intrin, depth_scale, depth_image,r['masks'],N)
         #
-        XYZ_coordinates = XYZ_calculation(XYZ_coordinates, depth_intrin, depth_scale, depth_image, mask, num, center)
+        # XYZ_coordinates = XYZ_calculation(XYZ_coordinates, depth_intrin, depth_scale, depth_image, mask, num, center)
+        XYZ_coordinates = []
+        XYZ_coordinates = XYZ_calculation(XYZ_coordinates, depth_intrin, depth_scale, depth_image, mask, center)
         filtered_XYZ = []
         for ele in range(len(XYZ_coordinates)):
             if XYZ_coordinates[ele][2] < 700:
                 filtered_XYZ.append(XYZ_coordinates[ele])
 
-
-
-        print(f'Util: Berry Detection Results = {filtered_XYZ}')
-        print(time.time()-start)
+        if (len(filtered_XYZ) != 0):
+            x = XYZ_coordinates[0][0]/1000.0
+            y = XYZ_coordinates[0][1]/1000.0
+            z = XYZ_coordinates[0][2]/1000.0
+            k = kin.Kinematics()
+            point_base = k._camera2arm_base(point_camera=[x,y,z], pan_d=0, tilt_d=0)
+            print(point_base)
+        # print(f'Util: Berry Detection Results = {filtered_XYZ}')
+        # print(time.time()-start)
         cv2.imwrite(model_path1 + 'result.png', color_image)
-        # cv2.destroyAllWindows()
+        cv2.destroyAllWindows()
+        loop_count -= 1
         # loop_count = 0
-        # print(filtered_XYZ)
     return(filtered_XYZ)
 
 def blob_search(image_raw, color):
@@ -299,7 +317,6 @@ def blob_search(image_raw, color):
 
     # Define a mask using the lower and upper bounds of the target color
     mask_image = cv2.inRange(hsv_image, lower, upper)
-
     keypoints = detector.detect(mask_image)
 
     # Find blob centers in the image coordinates
@@ -308,8 +325,9 @@ def blob_search(image_raw, color):
     for i in range(num_blobs):
         blob_image_center.append((keypoints[i].pt[0],keypoints[i].pt[1]))
 
+    blob_image_center = fuse(blob_image_center, 30)
     output_masks=[]
-    for i in range(num_blobs):
+    for i in range(len(blob_image_center)):
         z = np.zeros((480, 848))
         z[int(blob_image_center[i][1])][int(blob_image_center[i][0])] = 1
         output_masks.append(z)
@@ -324,10 +342,8 @@ def blob_search(image_raw, color):
         f = 0 # do nothing
     else:
         # Convert image coordinates to global world coordinate using IM2W() function
-        for i in range(num_blobs):
+        for i in range(len(blob_image_center)):
             x_y.append((blob_image_center[i][0], blob_image_center[i][1]))
-
-
     cv2.namedWindow("Camera View")
     cv2.imshow("Camera View", image_raw)
     cv2.namedWindow("Mask View")
@@ -335,7 +351,30 @@ def blob_search(image_raw, color):
     cv2.namedWindow("Keypoint View")
     cv2.imshow("Keypoint View", im_with_keypoints)
 
-    cv2.waitKey(2)
-    return np.asanyarray(output_masks), num_blobs, blob_image_center
+    return np.asanyarray(mask_image)/255, len(blob_image_center), blob_image_center
+
+def dist2(p1, p2):
+    return (p1[0]-p2[0])**2 + (p1[1]-p2[1])**2
+
+def fuse(points, d):
+    ret = []
+    d2 = d * d
+    n = len(points)
+    taken = [False] * n
+    for i in range(n):
+        if not taken[i]:
+            count = 1
+            point = [points[i][0], points[i][1]]
+            taken[i] = True
+            for j in range(i+1, n):
+                if dist2(points[i], points[j]) < d2:
+                    point[0] += points[j][0]
+                    point[1] += points[j][1]
+                    count+=1
+                    taken[j] = True
+            point[0] /= count
+            point[1] /= count
+            ret.append((point[0], point[1]))
+    return ret
 
 find_berry_points()

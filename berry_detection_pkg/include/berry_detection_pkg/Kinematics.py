@@ -22,25 +22,25 @@ class Kinematics:
 			 [ -np.cos(theta_pan),  np.sin(theta_pan)*np.sin(theta_tilt), -np.cos(theta_tilt)*np.sin(theta_pan), 0.0070*np.cos(theta_pan) + 0.0750*np.sin(theta_pan) - 0.1381*np.cos(theta_tilt)*np.sin(theta_pan) - 0.1330*np.sin(theta_pan)*np.sin(theta_tilt) + np.sin(theta_pan)*(0.0550*np.cos(theta_tilt) + 0.1330*np.sin(theta_tilt) - 0.0550) + 0.1330], \
 		 	 [               0,                -np.cos(theta_tilt),                -np.sin(theta_tilt),                                                                                                                                                                                    0.1330 - 0.0831*np.sin(theta_tilt)], \
              [               0,                               0,                               0,                                                                                                                                                                                                                  1]]
-               
-		
+
+
 		X_w = np.matmul(T,X)
 		print(X_w)
 		return [X_w[0], X_w[1], X_w[2]]
 
 
-	# calibration version 
+	# calibration version
 	def _camera2arm_base(self, point_camera, pan_d, tilt_d):
 		point_camera_h = np.array([point_camera[0], point_camera[1], point_camera[2], 1])
 		# #print(point_camera_h)
 		theta_pan = np.deg2rad(pan_d)
 		theta_tilt = np.deg2rad(tilt_d)
-		# transform = np.array([[ -np.sin(theta_pan),  np.cos(theta_pan)*np.sin(theta_tilt),  np.cos(theta_pan)*np.cos(theta_tilt), 0.0530*np.sin(theta_pan) - 0.0360*np.cos(theta_pan) + 0.1343*np.cos(theta_pan)*np.cos(theta_tilt) - 0.0670*np.cos(theta_pan)*np.sin(theta_tilt) + np.cos(theta_pan)*(0.0670*np.sin(theta_tilt) - 0.0560*np.cos(theta_tilt) + 0.0560) + 0.0360], 
-		# 					[ -np.cos(theta_pan), -np.sin(theta_pan)*np.sin(theta_tilt), -np.cos(theta_tilt)*np.sin(theta_pan), 0.0530*np.cos(theta_pan) + 0.0360*np.sin(theta_pan) - 0.1343*np.cos(theta_tilt)*np.sin(theta_pan) + 0.0670*np.sin(theta_pan)*np.sin(theta_tilt) - np.sin(theta_pan)*(0.0670*np.sin(theta_tilt) - 0.0560*np.cos(theta_tilt) + 0.0560) + 0.1435], 
-		# 					[0, -np.cos(theta_tilt), np.sin(theta_tilt), 0.0784*np.sin(theta_tilt) + 0.0670], 
+		# transform = np.array([[ -np.sin(theta_pan),  np.cos(theta_pan)*np.sin(theta_tilt),  np.cos(theta_pan)*np.cos(theta_tilt), 0.0530*np.sin(theta_pan) - 0.0360*np.cos(theta_pan) + 0.1343*np.cos(theta_pan)*np.cos(theta_tilt) - 0.0670*np.cos(theta_pan)*np.sin(theta_tilt) + np.cos(theta_pan)*(0.0670*np.sin(theta_tilt) - 0.0560*np.cos(theta_tilt) + 0.0560) + 0.0360],
+		# 					[ -np.cos(theta_pan), -np.sin(theta_pan)*np.sin(theta_tilt), -np.cos(theta_tilt)*np.sin(theta_pan), 0.0530*np.cos(theta_pan) + 0.0360*np.sin(theta_pan) - 0.1343*np.cos(theta_tilt)*np.sin(theta_pan) + 0.0670*np.sin(theta_pan)*np.sin(theta_tilt) - np.sin(theta_pan)*(0.0670*np.sin(theta_tilt) - 0.0560*np.cos(theta_tilt) + 0.0560) + 0.1435],
+		# 					[0, -np.cos(theta_tilt), np.sin(theta_tilt), 0.0784*np.sin(theta_tilt) + 0.0670],
 		# 					[0, 0, 0, 1]])
-		# transform = np.array([[1.0*np.sin(theta_tilt)*np.cos(theta_pan), -1.0*np.cos(theta_pan)*np.cos(theta_tilt), -1.0*np.sin(theta_pan), 0.0356*np.sin(theta_pan) + 0.07405*np.cos(theta_pan)*np.cos(theta_tilt) - 0.00995*np.cos(theta_pan) - 0.00995], 
- 	# 		[-1.0*np.sin(theta_pan)*np.sin(theta_tilt), 1.0*np.sin(theta_pan)*np.cos(theta_tilt), -1.0*np.cos(theta_pan), -0.07405*np.sin(theta_pan)*np.cos(theta_tilt) + 0.00995*np.sin(theta_pan) + 0.0356*np.cos(theta_pan)], 
+		# transform = np.array([[1.0*np.sin(theta_tilt)*np.cos(theta_pan), -1.0*np.cos(theta_pan)*np.cos(theta_tilt), -1.0*np.sin(theta_pan), 0.0356*np.sin(theta_pan) + 0.07405*np.cos(theta_pan)*np.cos(theta_tilt) - 0.00995*np.cos(theta_pan) - 0.00995],
+ 	# 		[-1.0*np.sin(theta_pan)*np.sin(theta_tilt), 1.0*np.sin(theta_pan)*np.cos(theta_tilt), -1.0*np.cos(theta_pan), -0.07405*np.sin(theta_pan)*np.cos(theta_tilt) + 0.00995*np.sin(theta_pan) + 0.0356*np.cos(theta_pan)],
   # 			[1.0*np.cos(theta_tilt), 1.0*np.sin(theta_tilt), 0, 0.0619 - 0.07405*np.sin(theta_tilt)], [0., 0., 0., 1.]])
 
 		transform = np.array([[-1.0*np.sin(theta_pan), -1.0*np.sin(theta_tilt)*np.cos(theta_pan), 1.0*np.cos(theta_pan)*np.cos(theta_tilt), 0.0356*np.sin(theta_pan) + 0.07405*np.cos(theta_pan)*np.cos(theta_tilt) - 0.00995*np.cos(theta_pan) - 0.00995], [-1.0*np.cos(theta_pan), 1.0*np.sin(theta_pan)*np.sin(theta_tilt), -1.0*np.sin(theta_pan)*np.cos(theta_tilt), -0.07405*np.sin(theta_pan)*np.cos(theta_tilt) + 0.00995*np.sin(theta_pan) + 0.0356*np.cos(theta_pan)], [0, -1.0*np.cos(theta_tilt), -1.0*np.sin(theta_tilt), 0.0619 - 0.07405*np.sin(theta_tilt)], [0, 0, 0, 1.00000000000000]])

@@ -16,7 +16,7 @@ class berry_detector:
         # Starts a new node
         rospy.init_node('berry_detect', anonymous=True)
         self._kinematics = kin.Kinematics() # Create kinematics class
-   
+
         # Create a publisher that publishes to /turtle1/cmd_vel
         # self._berry_point_publisher = rospy.Publisher('/berry_detector', berry_pos, queue_size=10)
         # self._berry_detector_call = rospy.Subscriber('/berry_detector_call', Bool, self.find_points)
@@ -30,14 +30,14 @@ class berry_detector:
 
 #     # Find Berries in the image
 #     def find_points(self, msg):
-# ## FILL IN THE OBJECT DETECTION CODE OR INSERT THE ROS_WRAPPER - Added berry detection code in util## 
-        
-        
+# ## FILL IN THE OBJECT DETECTION CODE OR INSERT THE ROS_WRAPPER - Added berry detection code in util##
+
+
 #         # while not rospy.is_shutdown():
 #         save_result = berry_pos()
 #         points_output = util.find_berry_points()
 #         # points_output =[[0.16, -0.45, 0.15]] #util.find_berry_points()
-#         print(f'berry_detect_callback: {points_output} in mm') 
+#         print(f'berry_detect_callback: {points_output} in mm')
 #         num_detected = len(points_output)
 #         for i in range(num_detected):
 #             x = points_output[i][0]/1000.0
@@ -51,16 +51,16 @@ class berry_detector:
 
     # Find Berries in the image
     def _berry_detect_callback(self, msg):
-## FILL IN THE OBJECT DETECTION CODE OR INSERT THE ROS_WRAPPER - Added berry detection code in util## 
-        
-        
+## FILL IN THE OBJECT DETECTION CODE OR INSERT THE ROS_WRAPPER - Added berry detection code in util##
+
+
         # while not rospy.is_shutdown():
         save_result = []#berry_pos()
         points_output = util.find_berry_points()
         # points_output =[[0.16, -0.45, 0.15]] #util.find_berry_points()
         # points_output =[]
         print("Pan {} Tilt: {}".format(msg.camera_config_d[0], msg.camera_config_d[1]))
-        print(f'berry_detect_callback: {points_output} in mm') 
+        print(f'berry_detect_callback: {points_output} in mm')
         num_detected = len(points_output)
         if (num_detected != 0):
             for i in range(num_detected):
@@ -71,12 +71,12 @@ class berry_detector:
                 current_point = Point() # Point([point_base[0], point_base[1], point_base[2]])
                 current_point.x = point_base[0]
                 current_point.y = point_base[1]
-                current_point.z = point_base[2]
+                current_point.z = point_base[2]-0.15
 
                 save_result.append(current_point)
         # else:
             # print("C")
-            # current_point = Point() 
+            # current_point = Point()
             # current_point.x = 0
             # current_point.y = 0
             # current_point.z = 0
@@ -89,8 +89,9 @@ class berry_detector:
         # temp1 = Point(0.4, 0.1, 0.5)
         # temp2 = Point(0.45, 0.0, 0.55)
         # save_result = [temp, temp1, temp2]
+        print(save_result)
         return berry_detectResponse(save_result)
-        
+
 
 
 if __name__ == '__main__':
@@ -100,4 +101,3 @@ if __name__ == '__main__':
         rospy.spin()
     except rospy.ROSInterruptException:
         pass
-

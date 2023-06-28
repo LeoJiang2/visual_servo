@@ -2,8 +2,8 @@
 
     <!--<rosparam file="$(find pi_comm_pkg)/config/pin_out.yaml" />
     <rosparam file="$(find pi_comm_pkg)/config/parameters.yaml" />-->
-   
-    <node pkg="state_machine_pkg" name="TOP_FSM" type="fsm_attempt2.py" output="screen"/>
+
+    <node pkg="state_machine_pkg" name="TOP_FSM" type="fsm_attempt2.py" output="screen" cwd="node"/>
     <node pkg="berry_detection_pkg" name="berry_detection" type="berry_detect.py" output="screen"/>
-    
+
 </launch>
