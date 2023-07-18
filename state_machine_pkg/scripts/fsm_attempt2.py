@@ -27,6 +27,8 @@ from pi_comm_pkg.msg import servo_camera
 from pi_comm_pkg.msg import servo_arm
 from pi_comm_pkg.msg import theta_4_arm
 from pi_comm_pkg.msg import arm_state
+from pi_comm_pkg.msg import extrusion
+from pi_comm_pkg.msg import soft_arm
 from task_space_pkg.msg import rigid_arm_position_desired
 from vs import berry_vs
 from std_msgs.msg import Bool
@@ -55,7 +57,9 @@ global picked_list
 picked_list = [[0.0,0.0,0.0]]
 global cur_arm_position
 cur_arm_position = None
-
+# extrusion
+global exd
+exd = 0
 global delta
 delta = []
 
@@ -83,6 +87,8 @@ berry_detect_pub = rospy.Publisher('/berry_detector_call', Bool, queue_size=10)
 rigid_arm_position_desired_pub = rospy.Publisher('task_space/rigid_arm_position_desired', rigid_arm_position_desired, queue_size=10)
 servo_theta_4_pub = rospy.Publisher('pi_comm/theta_4_arm', theta_4_arm, queue_size=10)
 servo_arm_pub = rospy.Publisher('pi_comm/servo_arm', servo_arm, queue_size=10)
+stepper_control_pub = rospy.Publisher('pi_comm/set_extrusion', extrusion, queue_size=10)
+soft_arm_pub = rospy.Publisher('pi_comm/soft_arm', soft_arm, queue_size=10)
 
 
 # Signal handler
@@ -266,9 +272,6 @@ class DETECTION_ALGORITHM(smach.State):
 
         return transition_output
 
-
-
-
         # # berry_detect_pub.publish(1) # Call for an image
         # start = time.time()
         # transition_output = 'detected'
@@ -388,7 +391,7 @@ class SERVO_CONROLLER_ARM(smach.State):
         print("Current Target: {}".format(current_target))
         msg = rigid_arm_position_desired()
         # msg.rigid_arm_position_desired = current_target
-        msg.rigid_arm_position_desired = [current_target[0]-0.2, current_target[1], current_target[2]]
+        msg.rigid_arm_position_desired = [current_target[0]-0.15, current_target[1], current_target[2]]
         rigid_arm_position_desired_pub.publish(msg)
         rospy.sleep(2)
         global cur_arm_position
@@ -412,7 +415,7 @@ class CHECK_VISUAL_SERVO(smach.State):
             transition_output = 'centered'
         else:
             transition_output = 'not_centered'
-        if np.abs(delta[2]>30):
+        if np.abs(delta[2]>45):
             transition_output = 'not_detected'
         return transition_output
 
@@ -466,9 +469,8 @@ class MOVE_GRIPPER(smach.State):
     def execute(self, userdata):
         # global berry_detect_output
         global delta
+        global exd
         # current_angles
-
-        print('delta')
         current_deg = self._cur_rigid_arm_config
         # theta1, 2 ,3
         t1 = current_deg[0]
@@ -486,12 +488,25 @@ class MOVE_GRIPPER(smach.State):
                 t2 = t2 + error
             else:
                 t2 = t2 - error
-        if delta[2] > 1.5:
+        if delta[2] > 7:
             t2 = t2 - 3
             t3 = t3 - 3
+        elif delta[2]>1.5 and delta[2]<=7:
+            exd += 0.5;
+
         msg = servo_arm()
         msg.servo_arm_rad = [np.deg2rad(t1), np.deg2rad(t2), np.deg2rad(t3)]
         servo_arm_pub.publish(msg)
+        msg = extrusion()
+        msg.length_cm = exd
+        stepper_control_pub.publish(msg)
+        # pressurize the soft arm once it extends
+        if exd >= 3:
+            msg = soft_arm()
+            msg.bend_press = 0
+            msg.rot_1_press = 20
+            msg.rot_2_press = 25
+            soft_arm_pub.publish(msg)
         return 'check'
 
 
@@ -647,6 +662,14 @@ def main():
     msg.rigid_arm_position_desired = [0.3, 0.0, 0.6]
     global rigid_arm_position_desired_pub
     rigid_arm_position_desired_pub.publish(msg)
+    msg = soft_arm()
+    msg.bend_press = 0
+    msg.rot_1_press = 0
+    msg.rot_2_press = 0
+    soft_arm_pub.publish(msg)
+    msg = extrusion()
+    msg.length_cm = 0
+    stepper_control_pub.publish(msg)
     global cur_arm_position
     _position = [0.3, 0.0, 0.6]
     global servo_theta_4_pub

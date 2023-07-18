@@ -25,8 +25,6 @@ from matplotlib.patches import Polygon
 from PIL import Image
 
 
-from berry_detection_pkg import Kinematics as kin
-
 # Import Mask RCNN
 # import mrcnn.model as modellib
 # from mrcnn import visualize
@@ -177,7 +175,7 @@ def find_berry_points():
     # Streaming loop
 
 
-    loop_count = 5
+    loop_count = 4
     XYZ_coordinates = []
     while loop_count > 1:
 
@@ -252,13 +250,13 @@ def find_berry_points():
             if XYZ_coordinates[ele][2] < 700:
                 filtered_XYZ.append(XYZ_coordinates[ele])
 
-        if (len(filtered_XYZ) != 0):
-            x = XYZ_coordinates[0][0]/1000.0
-            y = XYZ_coordinates[0][1]/1000.0
-            z = XYZ_coordinates[0][2]/1000.0
-            k = kin.Kinematics()
-            point_base = k._camera2arm_base(point_camera=[x,y,z], pan_d=0, tilt_d=0)
-            print(point_base)
+        # if (len(filtered_XYZ) != 0):
+        #     x = XYZ_coordinates[0][0]/1000.0
+        #     y = XYZ_coordinates[0][1]/1000.0
+        #     z = XYZ_coordinates[0][2]/1000.0
+        #     k = kin.Kinematics()
+        #     point_base = k._camera2arm_base(point_camera=[x,y,z], pan_d=0, tilt_d=0)
+        #     print(point_base)
         # print(f'Util: Berry Detection Results = {filtered_XYZ}')
         # print(time.time()-start)
         cv2.imwrite(model_path1 + 'result.png', color_image)
@@ -376,5 +374,3 @@ def fuse(points, d):
             point[1] /= count
             ret.append((point[0], point[1]))
     return ret
-
-find_berry_points()

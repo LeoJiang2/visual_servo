@@ -170,4 +170,6 @@ def fuse(points, d):
             point[1] /= count
             ret.append((point[0], point[1]))
     return ret
+	
+
 berry_vs()
