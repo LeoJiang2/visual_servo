@@ -13,6 +13,7 @@ import colorsys
 #import IPython.display
 import pandas as pd
 
+from math import sin, cos
 from skimage.measure import find_contours
 from PIL import Image
 
@@ -40,6 +41,19 @@ def berry_vs():
 		delta.append(z-zd)
 	print(delta)
 	return delta
+
+
+
+def cal_error(t1, t2, t3, d1, d2, d3):
+	# x = d1*cos(t2 - t3)*cos(t1) - 0.267*cos(t1)*sin(t2) - 1.0*d2*sin(t1) - 0.02*sin(t1) - 1.0*d3*sin(t2 - t3)*cos(t1) + 0.415*cos(t1)*cos(t2)*sin(t3) - 0.415*cos(t1)*cos(t3)*sin(t2)
+	# y = 0.02*cos(t1) - 0.267*sin(t1)*sin(t2) + d2*cos(t1) + 0.415*cos(t2)*sin(t1)*sin(t3) - 0.415*cos(t3)*sin(t1)*sin(t2) + d1*cos(t2 - t3)*sin(t1) - 1.0*d3*sin(t2 - t3)*sin(t1)
+	# z = 0.415*cos(t2 - t3) + 0.267*cos(t2) + d3*cos(t2 - t3) + d1*sin(t2 - t3) + 0.203
+	x = d1*cos(t2 - t3)*cos(t1) - 0.267*cos(t1)*sin(t2) - 1.0*d2*sin(t1) - 0.02775*cos(t1)*sin(t2)*sin(t3) - 0.0213*sin(t1) - 1.0*d3*sin(t2 - t3)*cos(t1) - 0.02775*cos(t1)*cos(t2)*cos(t3) + 0.4407*cos(t1)*cos(t2)*sin(t3) - 0.4407*cos(t1)*cos(t3)*sin(t2)
+	y = 0.0213*cos(t1) - 0.267*sin(t1)*sin(t2) + d2*cos(t1) + 0.4407*cos(t2)*sin(t1)*sin(t3) - 0.4407*cos(t3)*sin(t1)*sin(t2) - 0.02775*sin(t1)*sin(t2)*sin(t3) + d1*cos(t2 - t3)*sin(t1) - 1.0*d3*sin(t2 - t3)*sin(t1) - 0.02775*cos(t2)*cos(t3)*sin(t1)
+	z = 0.44157281675845944219620991630904*cos(t2 - t3 + 0.062884980792608442735334216260151) + 0.267*cos(t2) + d3*cos(t2 - t3) + d1*sin(t2 - t3) + 0.203
+	print(x,y,z)
+	return [x, y, z]
+
 
 def blob_search(image_raw, color):
 
@@ -103,12 +117,12 @@ def blob_search(image_raw, color):
         for i in range(len(blob_image_center)):
             x_y.append((blob_image_center[i][0], blob_image_center[i][1]))
 
-    cv2.namedWindow("Camera View")
-    cv2.imshow("Camera View", image_raw)
-    cv2.namedWindow("Mask View")
-    cv2.imshow("Mask View", mask_image)
-    cv2.namedWindow("Keypoint View")
-    cv2.imshow("Keypoint View", im_with_keypoints)
+    # cv2.namedWindow("Camera View")
+    # cv2.imshow("Camera View", image_raw)
+    # cv2.namedWindow("Mask View")
+    # cv2.imshow("Mask View", mask_image)
+    # cv2.namedWindow("Keypoint View")
+    # cv2.imshow("Keypoint View", im_with_keypoints)
 
     return np.asanyarray(mask_image), blob_image_center
 
@@ -135,3 +149,5 @@ def fuse(points, d):
             point[1] /= count
             ret.append((point[0], point[1]))
     return ret
+
+cal_error(np.deg2rad(-10), np.deg2rad(-30), np.deg2rad(90), 0, 0, 0)

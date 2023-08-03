@@ -14,6 +14,7 @@ import threading
 import smach
 from smach import CBState
 import numpy as np
+import math
 from numpy import linalg as la
 
 import vs
@@ -30,7 +31,7 @@ from pi_comm_pkg.msg import arm_state
 from pi_comm_pkg.msg import extrusion
 from pi_comm_pkg.msg import soft_arm
 from task_space_pkg.msg import rigid_arm_position_desired
-from vs import berry_vs
+from vs import berry_vs, cal_error
 from std_msgs.msg import Bool
 from state_machine_pkg.srv import berry_detect
 
@@ -376,7 +377,7 @@ class MOTION_PLANNING_ALGO(smach.State):
         return 'send_to_servo_Controller'
 
 # define state SERVO_CONROLLER_ARM
-class SERVO_CONROLLER_ARM(smach.State):
+class SERVO_CONTROLLER_ARM(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['error_check_rigid_arm'])
         global rigid_arm_position_desired_pub
@@ -391,7 +392,7 @@ class SERVO_CONROLLER_ARM(smach.State):
         print("Current Target: {}".format(current_target))
         msg = rigid_arm_position_desired()
         # msg.rigid_arm_position_desired = current_target
-        msg.rigid_arm_position_desired = [current_target[0]-0.15, current_target[1], current_target[2]]
+        msg.rigid_arm_position_desired = [current_target[0]-0.1, current_target[1], current_target[2]]
         rigid_arm_position_desired_pub.publish(msg)
         rospy.sleep(2)
         global cur_arm_position
@@ -432,12 +433,12 @@ class CHECK_VISUAL_SERVO(smach.State):
 #         global delta
 #         # current_angles
 #
-#         print('delta')
 #         current_deg = self._cur_rigid_arm_config
 #         # theta1, 2 ,3
 #         t1 = current_deg[0]
 #         t2 = current_deg[1]
 #         t3 = current_deg[2]
+#         print('t',t1,t2,t3)
 #         base_error = 3
 #         error = base_error*delta[2]/10
 #         if np.abs(delta[0]) > 30:
@@ -459,145 +460,99 @@ class CHECK_VISUAL_SERVO(smach.State):
 #         return 'check'
 
 # soft arm included
+# class MOVE_GRIPPER(smach.State):
+#     def __init__(self):
+#         self._cur_rigid_arm_config = [90.0, 90.0, 90.0]
+#         smach.State.__init__(self, outcomes=['check'])
+#         rospy.Subscriber("pi_comm/arm_state", arm_state, self._state_update_callback)
+#     def _state_update_callback(self, msg):
+# 		self._cur_rigid_arm_config = [np.rad2deg(msg.joints_rad[0]), np.rad2deg(msg.joints_rad[1]), np.rad2deg(msg.joints_rad[2]), np.rad2deg(msg.theta_4_rad)]
+#     def execute(self, userdata):
+#         # global berry_detect_output
+#         global delta
+#         global exd
+#         # current_angles
+#         current_deg = self._cur_rigid_arm_config
+#         # theta1, 2 ,3
+#         t1 = current_deg[0]
+#         t2 = current_deg[1]
+#         t3 = current_deg[2]
+#         base_error = 3
+#         error = base_error*delta[2]/10
+#         if np.abs(delta[0]) > 30:
+#             if delta[0] < 0:
+#                 t1 = t1 + error
+#             else:
+#                 t1 = t1 - error
+#         if np.abs(delta[1]) > 30:
+#             if delta[1] < 0:
+#                 t2 = t2 + error
+#             else:
+#                 t2 = t2 - error
+#         if delta[2] > 7:
+#             t2 = t2 - 3
+#             t3 = t3 - 3
+#         elif delta[2]>1.5 and delta[2]<=7:
+#             exd += 0.5;
+#
+#         msg = servo_arm()
+#         msg.servo_arm_rad = [np.deg2rad(t1), np.deg2rad(t2), np.deg2rad(t3)]
+#         servo_arm_pub.publish(msg)
+#         msg = extrusion()
+#         msg.length_cm = exd
+#         stepper_control_pub.publish(msg)
+#         # pressurize the soft arm once it extends
+#         if exd >= 3:
+#             msg = soft_arm()
+#             msg.bend_press = 0
+#             msg.rot_1_press = 20
+#             msg.rot_2_press = 25
+#             soft_arm_pub.publish(msg)
+#         return 'check'
+
+# jacobian
 class MOVE_GRIPPER(smach.State):
     def __init__(self):
-        self._cur_rigid_arm_config = [90.0, 90.0, 90.0]
+        self._cur_rigid_arm_config = [math.pi/2, math.pi/2, math.pi/2]
         smach.State.__init__(self, outcomes=['check'])
         rospy.Subscriber("pi_comm/arm_state", arm_state, self._state_update_callback)
     def _state_update_callback(self, msg):
-		self._cur_rigid_arm_config = [np.rad2deg(msg.joints_rad[0]), np.rad2deg(msg.joints_rad[1]), np.rad2deg(msg.joints_rad[2]), np.rad2deg(msg.theta_4_rad)]
+		self._cur_rigid_arm_config = [msg.joints_rad[0], msg.joints_rad[1], msg.joints_rad[2], msg.theta_4_rad]
     def execute(self, userdata):
         # global berry_detect_output
         global delta
         global exd
+        global rigid_arm_position_desired_pub
         # current_angles
         current_deg = self._cur_rigid_arm_config
         # theta1, 2 ,3
         t1 = current_deg[0]
         t2 = current_deg[1]
         t3 = current_deg[2]
-        base_error = 3
-        error = base_error*delta[2]/10
-        if np.abs(delta[0]) > 30:
-            if delta[0] < 0:
-                t1 = t1 + error
-            else:
-                t1 = t1 - error
-        if np.abs(delta[1]) > 30:
-            if delta[1] < 0:
-                t2 = t2 + error
-            else:
-                t2 = t2 - error
-        if delta[2] > 7:
-            t2 = t2 - 3
-            t3 = t3 - 3
-        elif delta[2]>1.5 and delta[2]<=7:
-            exd += 0.5;
-
-        msg = servo_arm()
-        msg.servo_arm_rad = [np.deg2rad(t1), np.deg2rad(t2), np.deg2rad(t3)]
-        servo_arm_pub.publish(msg)
-        msg = extrusion()
-        msg.length_cm = exd
-        stepper_control_pub.publish(msg)
-        # pressurize the soft arm once it extends
-        if exd >= 3:
-            msg = soft_arm()
-            msg.bend_press = 0
-            msg.rot_1_press = 20
-            msg.rot_2_press = 25
-            soft_arm_pub.publish(msg)
-        return 'check'
-
-
-# define state ERROR_CHECK_RIGID_ARM
-class ERROR_CHECK_RIGID_ARM(smach.State):
-    def __init__(self):
-        smach.State.__init__(self, outcomes=['yes', 'no', 'reach'])
-
-
-    def execute(self, userdata):
-##      rospy.loginfo('Executing state ERROR_CHECK_RIGID_ARM')
-        # global counter
-        # counter += 1
-        # random_check = 0 #random.choice([0, 1])
-        # if random_check == 0 :
-        #     transition_output = 'yes'
+        errorx = (delta[2]*(delta[1]-4.896)/262.2)/100
+        errory = (delta[2]*(delta[0]+13.73)/-127)/100
+        print('error', errorx, errory)
+        if delta[2]>1.5:
+            errorz = 0.01+0.0005*delta[2]
+        else:
+            errorz = 0
+        xyz_new = cal_error(t1,t2,t3, errorx, errory, errorz)
+        # if delta[2] < 1.5:
+        #     xyz_new = cal_error(t1,t2,t3, 0, 0, 0)
         # else:
-        #     transition_output = 'no'
-
-
-        transition_output = 'reach'
-
-        return transition_output
-
-# define state MOTION_PLANNING_PERIPHERY
-class MOTION_PLANNING_PERIPHERY(smach.State):
-    def __init__(self):
-        smach.State.__init__(self, outcomes=['send_to_servo_Controller'])
-
-
-    def execute(self, userdata):
-##      rospy.loginfo('Executing state MOTION_PLANNING_PERIPHERY')
-
-        return 'send_to_servo_Controller'
-
-# define state SERVO_CONROLLER_ARM_2
-class SERVO_CONROLLER_ARM_2(smach.State):
-    def __init__(self):
-        smach.State.__init__(self, outcomes=['reachable_using_soft_arm'])
-
-
-    def execute(self, userdata):
-##      rospy.loginfo('Executing state SERVO_CONROLLER_ARM_2')
-
-        return 'reachable_using_soft_arm'
-
-
-# define state REACHABLE_WITH_SOFT_ARM
-class REACHABLE_WITH_SOFT_ARM(smach.State):
-    def __init__(self):
-        smach.State.__init__(self, outcomes=['yes', 'no'])
-
-
-    def execute(self, userdata):
-##      rospy.loginfo('Executing state REACHABLE_WITH_SOFT_ARM')
-
-        random_check = 0 #random.choice([0, 1])
-        if random_check == 0 :
-            transition_output = 'yes'
-        else:
-            transition_output = 'no'
-
-        return transition_output
-
-# define state SOFT_ARM_CONTROL
-class SOFT_ARM_CONTROL(smach.State):
-    def __init__(self):
-        smach.State.__init__(self, outcomes=['error_check_soft_arm'])
-
-
-    def execute(self, userdata):
-##      rospy.loginfo('Executing state SOFT_ARM_CONTROL')
-
-        return 'error_check_soft_arm'
-
-# define state ERROR_CHECK_SOFT_ARM
-class ERROR_CHECK_SOFT_ARM(smach.State):
-    def __init__(self):
-        smach.State.__init__(self, outcomes=['yes', 'no'])
-
-
-    def execute(self, userdata):
-##      rospy.loginfo('Executing state ERROR_CHECK_SOFT_ARM')
-
-        random_check = 1 #random.choice([0, 1])
-        if random_check == 0 :
-            transition_output = 'yes'
-        else:
-            transition_output = 'no'
-
-        return transition_output
+        #     xyz_new = cal_error(t1,t2,t3, errorx, errory, errorz)
+        #     xyz_cur= cal_error(t1,t2,t3, 0,0,0)
+        #     print('xyz_cur',xyz_cur, 'xyz_new',  xyz_new)
+        # if np.abs(delta[0]) > 30 or np.abs(delta[1]) > 30 or delta[2] > 2:
+        #     xyz_new = cal_error(t1,t2,t3, errorx, errory, errorz)
+        #     xyz_cur= cal_error(t1,t2,t3, 0,0,0)
+        #     print('xyz_cur',xyz_cur, 'xyz_new',  xyz_new)
+        # else:
+        #     xyz_new = cal_error(t1,t2,t3, 0, 0, 0)
+        msg = rigid_arm_position_desired()
+        msg.rigid_arm_position_desired = xyz_new
+        rigid_arm_position_desired_pub.publish(msg)
+        return 'check'
 
 
 # # define state ERROR_CHECK_SOFT_ARM
@@ -633,18 +588,13 @@ class REACH_BERRY(smach.State):
         # else:
         #     transition_output = 'stop'
 
-
+        transition_output = 'go_back_scan'
         if len(berry_detect_list) == 0:
             transition_output = 'go_back_scan'
         elif counter < 6:
             transition_output = 'go_back'
         else:
             transition_output = 'stop'
-             # random_check = 1 #random.choice([0, 1])
-             # if random_check == 0 :
-             #     transition_output = 'stop'
-             # else:
-             #     transition_output = 'go_back'
 
         return transition_output
 
@@ -718,44 +668,16 @@ def main():
 
         with sm_reach_berry:
 
-            # # Create and add the REACHABLE_WITH_RIGID_OR_SOFT_ARM SMACH state
-            # smach.StateMachine.add('REACHABLE_WITH_RIGID_OR_SOFT_ARM', REACHABLE_WITH_RIGID_OR_SOFT_ARM(), {'yes':'OBSTACLES', 'no':'go_back_scan'})
-            #
-            # # Create and add the OBSTACLES SMACH state
-            # smach.StateMachine.add('OBSTACLES', OBSTACLES(), {'yes':'MOTION_PLANNING_PERIPHERY', 'no':'REACHABLE_WITH_RIGID_ARM'})
-            #
-            # # Create and add the REACHABLE_WITH_RIGID_ARM SMACH state
-            # smach.StateMachine.add('REACHABLE_WITH_RIGID_ARM', REACHABLE_WITH_RIGID_ARM(), {'yes':'MOTION_PLANNING_ALGO', 'no':'MOTION_PLANNING_PERIPHERY'})
-            #
-            # # Create and add the MOTION_PLANNING_ALGO SMACH state
-            # smach.StateMachine.add('MOTION_PLANNING_ALGO', MOTION_PLANNING_ALGO(), {'send_to_servo_Controller':'SERVO_CONROLLER_ARM'})
             #
             # Create and add the SERVO_CONROLLER_ARM SMACH state
-            smach.StateMachine.add('SERVO_CONROLLER_ARM', SERVO_CONROLLER_ARM(), {'error_check_rigid_arm':'CHECK_VISUAL_SERVO'})
+            smach.StateMachine.add('SERVO_CONTROLLER_ARM', SERVO_CONTROLLER_ARM(), {'error_check_rigid_arm':'CHECK_VISUAL_SERVO'})
 
             # check visual servo
-            smach.StateMachine.add('CHECK_VISUAL_SERVO', CHECK_VISUAL_SERVO(), {'centered':'REACH_BERRY', 'not_centered':'MOVE_GRIPPER', 'not_detected':'REACH_BERRY'})
+            smach.StateMachine.add('CHECK_VISUAL_SERVO', CHECK_VISUAL_SERVO(), {'centered':'REACH_BERRY', 'not_centered':'MOVE_GRIPPER', 'not_detected':'go_back_scan'})
             # visual servo state
             smach.StateMachine.add('MOVE_GRIPPER', MOVE_GRIPPER(), {'check' :'CHECK_VISUAL_SERVO'})
-            # # Create and add the ERROR_CHECK_RIGID_ARM SMACH state
-            # smach.StateMachine.add('ERROR_CHECK_RIGID_ARM', ERROR_CHECK_RIGID_ARM(), {'yes':'STOP2', 'no':'MOTION_PLANNING_ALGO', 'reach':'REACH_BERRY'})
             #
-            # # Create and add the MOTION_PLANNING_PERIPHERY SMACH state
-            # smach.StateMachine.add('MOTION_PLANNING_PERIPHERY', MOTION_PLANNING_PERIPHERY(), {'send_to_servo_Controller':'SERVO_CONROLLER_ARM_2'})
-            #
-            # # Create and add the SERVO_CONROLLER_ARM_2 SMACH state
-            # smach.StateMachine.add('SERVO_CONROLLER_ARM_2', SERVO_CONROLLER_ARM_2(), {'reachable_using_soft_arm':'REACHABLE_WITH_SOFT_ARM'})
-            #
-            # # Create and add the REACHABLE_WITH_SOFT_ARM SMACH state
-            # smach.StateMachine.add('REACHABLE_WITH_SOFT_ARM', REACHABLE_WITH_SOFT_ARM(), {'yes':'SOFT_ARM_CONTROL', 'no':'MOTION_PLANNING_PERIPHERY'})
-            #
-            # # Create and add the SOFT_ARM_CONTROL SMACH state
-            # smach.StateMachine.add('SOFT_ARM_CONTROL', SOFT_ARM_CONTROL(), {'error_check_soft_arm':'ERROR_CHECK_SOFT_ARM'})
-            #
-            #  # Create and add the ERROR_CHECK_SOFT_ARM SMACH state
-            # smach.StateMachine.add('ERROR_CHECK_SOFT_ARM', ERROR_CHECK_SOFT_ARM(), {'yes':'STOP2', 'no':'SOFT_ARM_CONTROL'})
-            #
-            smach.StateMachine.add('REACH_BERRY', REACH_BERRY(), {'stop':'STOP2', 'go_back_scan':'go_back_scan', 'go_back':'SERVO_CONROLLER_ARM'})
+            smach.StateMachine.add('REACH_BERRY', REACH_BERRY(), {'stop':'STOP2', 'go_back_scan':'go_back_scan', 'go_back':'SERVO_CONTROLLER_ARM'})
 
         smach.StateMachine.add('REACH_BERRY_SM',  sm_reach_berry, {'STOP2':'STOP', 'go_back_scan':'BERRY_DETECT_SM'})
 
