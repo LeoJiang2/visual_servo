@@ -275,7 +275,7 @@ class SERVO_CONTROLLER_ARM(smach.State):
         msg = rigid_arm_position_desired()
         # msg.rigid_arm_position_desired = current_target
         # move to somewhere in front of the target
-        msg.rigid_arm_position_desired = [current_target[0]-0.1, current_target[1], current_target[2]]
+        msg.rigid_arm_position_desired = [current_target[0]-0.1, current_target[1], current_target[2]+0.05]
         rigid_arm_position_desired_pub.publish(msg)
         rospy.sleep(2)
         global cur_arm_position
@@ -325,8 +325,8 @@ class MOVE_GRIPPER(smach.State):
         t2 = current_deg[1]
         t3 = current_deg[2]
         # Convert image pixel error to base coordinate error
-        errorx = (delta[2]*(delta[1]-4.896)/262.2)/100
-        errory = (delta[2]*(delta[0]+13.73)/-127)/100
+        errorx = (delta[2]*(delta[1]-4.896)/262.2)/100*0.6
+        errory = (delta[2]*(delta[0]+13.73)/-127)/100*0.6
         print('error', errorx, errory)
         if delta[2]>1.5:
             # set error z relative to the distance
@@ -339,6 +339,7 @@ class MOVE_GRIPPER(smach.State):
         msg = rigid_arm_position_desired()
         msg.rigid_arm_position_desired = xyz_new
         rigid_arm_position_desired_pub.publish(msg)
+        rospy.sleep(0.5)
         return 'check'
 
 

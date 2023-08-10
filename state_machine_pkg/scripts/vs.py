@@ -26,7 +26,6 @@ def berry_vs():
 	# x y in pixel,z calculated in cm
 	xd = 320
 	yd = 240
-	zd = 3
 	delta=[]
 	n = np.count_nonzero(mask)
 	if n != 0:
@@ -40,7 +39,7 @@ def berry_vs():
 		delta = []
 		delta.append(x-xd)
 		delta.append(y-yd)
-		delta.append(z-zd)
+		delta.append(z)
 	print(delta)
 	return delta
 
@@ -117,12 +116,12 @@ def blob_search(image_raw, color):
         for i in range(len(blob_image_center)):
             x_y.append((blob_image_center[i][0], blob_image_center[i][1]))
 
-    # cv2.namedWindow("Camera View")
-    # cv2.imshow("Camera View", image_raw)
-    # cv2.namedWindow("Mask View")
-    # cv2.imshow("Mask View", mask_image)
-    # cv2.namedWindow("Keypoint View")
-    # cv2.imshow("Keypoint View", im_with_keypoints)
+    cv2.namedWindow("Camera View")
+    cv2.imshow("Camera View", image_raw)
+    cv2.namedWindow("Mask View")
+    cv2.imshow("Mask View", mask_image)
+    cv2.namedWindow("Keypoint View")
+    cv2.imshow("Keypoint View", im_with_keypoints)
 
     return np.asanyarray(mask_image), blob_image_center
 
